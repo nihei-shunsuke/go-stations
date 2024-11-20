@@ -128,6 +128,24 @@ func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+	} else if r.Method == http.MethodDelete {
+		var req model.DeleteTODORequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if len(req.IDs) == 0 {
+			http.Error(w, "ids is required", http.StatusBadRequest)
+			return
+		}
+
+		ctx := r.Context()
+		err := h.svc.DeleteTODO(ctx, req.IDs)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
 	} else {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
